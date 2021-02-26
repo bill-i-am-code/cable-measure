@@ -25,8 +25,8 @@ unsigned long lastDebounceTime2 = 0;
 unsigned long lastDebounceTime3 = 0;  
 unsigned long debounceDelay = 50;
 
-const float C = 1;
-const int N = 1;
+const float C = 1; //circumference of measuring wheel
+const int N = 1; //number of "clicks" for one revolution of wheel
 
 
 void setup(){
@@ -35,8 +35,7 @@ void setup(){
     pinMode (switchPin1 ,INPUT);
     pinMode (switchPin2 ,INPUT);
     pinMode (switchPin3 ,INPUT);
-
-  lastState = digitalRead(encPin1); 
+    lastState = digitalRead(encPin1); 
 
     lcd.begin(16, 2);
     lcd.print("Cable Measure");
@@ -44,30 +43,29 @@ void setup(){
     // lcd.print("V0 210225");
     Serial.begin(9600);
 }
+
+// main loop
+
 void loop(){
+
+    //read rotary encoder
+
     state = digitalRead(encPin1);
     if (state != lastState){     
         if (digitalRead(encPin2) != state) { 
             pos ++;
         } 
-     
         else {
             pos --;
         }
     } 
     lastState = state;
 
+    //calculate measured length
+
     measuredLength = pos*C/N;
 
-    lcd.setCursor(0, 1);
-    char buff[8];
-    sprintf(buff, "%4d", measuredLength);
-    lcd.print(buff);
-    lcd.setCursor(9, 1);
-    char buff2[8];
-    sprintf(buff2, "%4d", targetLength);
-    lcd.print(buff2);
-   
+    //read from switch 1
 
     int s1 = digitalRead(switchPin1);
     if (s1 != lastSwitchState1){
@@ -83,6 +81,8 @@ void loop(){
     } 
     lastSwitchState1 = s1;
 
+    //read from switch 2
+
     int s2 = digitalRead(switchPin2);
     if (s2 != lastSwitchState2){
         lastDebounceTime2 = millis();
@@ -96,6 +96,8 @@ void loop(){
         }
     } 
     lastSwitchState2 = s2;
+
+    //read from switch 3
     
     int s3 = digitalRead(switchPin3);
     if (s3 != lastSwitchState3){
@@ -111,6 +113,18 @@ void loop(){
     } 
     lastSwitchState3 = s3;
 
+    //print results to LCD
+
+    lcd.setCursor(0, 1);
+    char buff[8];
+    sprintf(buff, "%4d", measuredLength);
+    lcd.print(buff);
+    lcd.setCursor(9, 1);
+    char buff2[8];
+    sprintf(buff2, "%4d", targetLength);
+    lcd.print(buff2);
+
+    //serial comms for testing
 
     Serial.print(s1);
     Serial.print("\t");
