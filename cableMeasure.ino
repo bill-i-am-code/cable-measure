@@ -11,13 +11,22 @@ int pos = 0;
 int state;
 int lastState;
 
-int switchstate1;
-int switchstate2;
-int switchstate3;
+int targetLength = 0;
+int measuredLength =0;
 
-const float pi = 3.14;
-const float R = 3.25;
-const int N = 40;
+int switchState1;
+int switchState2;
+int switchState3;
+int lastSwitchState1 = LOW;
+int lastSwitchState2 = LOW;
+int lastSwitchState3 = LOW;
+unsigned long lastDebounceTime1 = 0;  
+unsigned long lastDebounceTime2 = 0;  
+unsigned long lastDebounceTime3 = 0;  
+unsigned long debounceDelay = 50;
+
+const float C = 1;
+const int N = 1;
 
 
 void setup(){
@@ -33,6 +42,7 @@ void setup(){
     lcd.print("Cable Measure");
     // lcd.setCursor(0,1);
     // lcd.print("V0 210225");
+    Serial.begin(9600);
 }
 void loop(){
     state = digitalRead(encPin1);
@@ -45,35 +55,68 @@ void loop(){
             pos --;
         }
     } 
-    lcd.setCursor(0, 1);
-    char buff[8];
-    sprintf(buff, "%4d", pos);
-    lcd.print(buff);
     lastState = state;
 
-    switchstate1 = digitalRead(switchPin1);
-    if (switchstate1 == HIGH){
-        lcd.setCursor(15, 1);
-        lcd.print('1');
-        delay(100);
+    measuredLength = pos*C/N;
+
+    lcd.setCursor(0, 1);
+    char buff[8];
+    sprintf(buff, "%4d", measuredLength);
+    lcd.print(buff);
+    lcd.setCursor(9, 1);
+    char buff2[8];
+    sprintf(buff2, "%4d", targetLength);
+    lcd.print(buff2);
+   
+
+    int s1 = digitalRead(switchPin1);
+    if (s1 != lastSwitchState1){
+        lastDebounceTime1 = millis();
     }
-    switchstate2 = digitalRead(switchPin2);
-    if (switchstate2 == HIGH){
-        lcd.setCursor(15, 1);
-        lcd.print('2');
-        delay(100);
+    if ((millis() - lastDebounceTime1) > debounceDelay) {
+        if (s1 != switchState1) {
+            switchState1 = s1;
+            if(switchState1 == HIGH){
+                targetLength--;
+            }
+        }
+    } 
+    lastSwitchState1 = s1;
+
+    int s2 = digitalRead(switchPin2);
+    if (s2 != lastSwitchState2){
+        lastDebounceTime2 = millis();
     }
-    switchstate3 = digitalRead(switchPin3);
-    if (switchstate3 == HIGH){
-        lcd.setCursor(15, 1);
-        lcd.print('3');
-        delay(100);
+    if ((millis() - lastDebounceTime2) > debounceDelay) {
+        if (s2 != switchState2) {
+            switchState2 = s2;
+            if(switchState2 == HIGH){
+                targetLength++;
+            }
+        }
+    } 
+    lastSwitchState2 = s2;
+    
+    int s3 = digitalRead(switchPin3);
+    if (s3 != lastSwitchState3){
+        lastDebounceTime3 = millis();
     }
+    if ((millis() - lastDebounceTime3) > debounceDelay) {
+        if (s3 != switchState3) {
+            switchState3 = s3;
+            if(switchState3 == HIGH){
+                targetLength = 0;
+            }
+        }
+    } 
+    lastSwitchState3 = s3;
 
 
-
-
-    lcd.setCursor(15, 1);
-        lcd.print(' ');
+    Serial.print(s1);
+    Serial.print("\t");
+    Serial.print(switchState1);
+    Serial.print("\t");
+    Serial.print(targetLength);
+    Serial.println();
 
 }
