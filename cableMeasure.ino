@@ -1,18 +1,19 @@
 #include <LiquidCrystal.h>
 LiquidCrystal lcd (12, 11, 2, 3, 4, 5);
 
-int encPin1 = 9;
-int encPin2 = 10;
-int switchPin1 = 6;
-int switchPin2 = 7;
-int switchPin3 = 8;
+const int encPin2 = 10;
+const int encPin1 = 9;
+const int switchPin1 = 6;
+const int switchPin2 = 7;
+const int switchPin3 = 8;
+const int targetLengthIndicator = 13;
 
 int pos = 0; 
 int state;
 int lastState;
 
 int targetLength = 0;
-int measuredLength =0;
+int measuredLength = 0;
 
 int switchState1;
 int switchState2;
@@ -25,7 +26,7 @@ unsigned long lastDebounceTime2 = 0;
 unsigned long lastDebounceTime3 = 0;  
 unsigned long debounceDelay = 50;
 
-const float C = 1; //circumference of measuring wheel
+const int C = 1; //circumference of measuring wheel
 const int N = 1; //number of "clicks" for one revolution of wheel
 
 
@@ -35,7 +36,9 @@ void setup(){
     pinMode (switchPin1 ,INPUT);
     pinMode (switchPin2 ,INPUT);
     pinMode (switchPin3 ,INPUT);
+    pinMode (targetLengthIndicator, OUTPUT);
     lastState = digitalRead(encPin1); 
+    digitalWrite(targetLengthIndicator, LOW);
 
     lcd.begin(16, 2);
     lcd.print("Cable Measure");
@@ -74,7 +77,7 @@ void loop(){
     if ((millis() - lastDebounceTime1) > debounceDelay) {
         if (s1 != switchState1) {
             switchState1 = s1;
-            if(switchState1 == HIGH){
+            if(switchState1 == HIGH && targetLength > 0){
                 targetLength--;
             }
         }
@@ -113,6 +116,17 @@ void loop(){
     } 
     lastSwitchState3 = s3;
 
+    //check if target length met
+
+    if (targetLength > 0 and measuredLength%targetLength ==0)
+    {
+        digitalWrite(targetLengthIndicator, HIGH);
+    }
+    else{
+        digitalWrite(targetLengthIndicator, LOW);
+    }
+    
+
     //print results to LCD
 
     lcd.setCursor(0, 1);
@@ -128,9 +142,11 @@ void loop(){
 
     Serial.print(s1);
     Serial.print("\t");
-    Serial.print(switchState1);
+    Serial.print(measuredLength);
     Serial.print("\t");
     Serial.print(targetLength);
     Serial.println();
+    
+ 
 
 }
