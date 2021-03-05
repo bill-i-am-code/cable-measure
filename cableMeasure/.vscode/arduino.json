@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "programmer": "AVR ISP",
+    "sketch": "cableMeasure.ino",
+    "port": "/dev/tty.usbmodem143401"
+}
